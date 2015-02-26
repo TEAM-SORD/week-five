@@ -1,18 +1,11 @@
-// {
-// 	"ConsumerKey":"LAGenjX68Ae2NPaJTRzzWPUE6",
-// "ConsumerSecret":	"qAOHVHWu0AIADK2abmF8bGmHAWE7ydCQN3YIlPw8dYypGRifF5",
-// "AccessToken":	"821677447-fnZcXPYQCFYLA3ooihm7rE8fvcgLbdA7HRcif4RN",
-// "AccessTokenSecret":	"cOwk2TxxsyjxTkBoNWHfWzoYlnyEF0yOoQCwJioJAxbN8"
-// }
-
 {
-        "cKey" : "I4oWDpdFYlYUCRYDNFL4CzDrt",
-        "cSecret" : "hqcxswsmJyR5FYh5M0Ku5guICqbq6PtoU0d1UAef55iClyzxRH",
-        "atKey" : "21026937-s69iBSczgPOxl026rMxpuivKU3mmyRsqtrk2KcKrF",
-        "atSecret" : "LaovEej8XcbCTPUgARpNglqdShSII8xlzv6cL76qLv14j",
+    "cKey" : "I4oWDpdFYlYUCRYDNFL4CzDrt",
+    "cSecret" : "hqcxswsmJyR5FYh5M0Ku5guICqbq6PtoU0d1UAef55iClyzxRH",
+    "atKey" : "21026937-s69iBSczgPOxl026rMxpuivKU3mmyRsqtrk2KcKrF",
+    "atSecret" : "LaovEej8XcbCTPUgARpNglqdShSII8xlzv6cL76qLv14j",
 
-        "instaCID" : "dec2ef318424478c9c3c2fec2906d2d8",
-        "instaCSecret": "4489b8a23fd94579b4742d755746def6"
+    "instaCID" : "dec2ef318424478c9c3c2fec2906d2d8",
+    "instaCSecret": "4489b8a23fd94579b4742d755746def6"
 }
 
 

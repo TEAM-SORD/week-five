@@ -1,5 +1,3 @@
-//var path = require( 'path' );
-//var http = require('http');
 var Twitter = require('twitter');
 var config= require('./config.json');
 var fs = require('fs');
@@ -135,3 +133,4 @@ function serverHandler(request, response) {
 
 server.listen(myPort);
 console.log('server up and running');
+

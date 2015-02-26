@@ -6,6 +6,7 @@ var server = require('http').createServer( serverHandler );
 var io = require('socket.io')(server);
 var myPort = 3000;
 var tweetFile = "/tweetStorage.json";
+var allTweets = [];
 
 var currentTwitStream;
 //var oldTweets;
@@ -15,7 +16,7 @@ var client = new Twitter({
     access_token_key: config.atKey,
     access_token_secret: config.atSecret
 });
-console.log( )
+//console.log( )
 function updateTweetInFS( fsObject){
         // pull in json file from FS
         // look for the tweet original id
@@ -28,7 +29,7 @@ function regexFormatter (tweet){
   var regex = /\S*#(?:[[^]]+]|\S+)/g;
   var formatter = regex.exec(tweetText);
   if( formatter === null || formatter.length === 0) {
-    return [''];
+    return '';
   };
   var hash = formatter[0].slice(1);
   console.log( 'hash: '+ hash);
@@ -62,7 +63,29 @@ function getOriginalTweetId(tweet){
   };
 };
 
-
+function addOrUpdateTweetInFS( tweet, tweetObject ){
+  // if new tweet then push into db
+  //console.log( tweetObject );
+  var updated = false;
+  var origTweetID = tweetObject.origTweetID;
+  console.log( 'OrigTweetID: ' + origTweetID);
+  if( tweet.retweeted_status === undefined ) {
+    console.log( 'New tweet so push to global array. ID: ' + origTweetID);
+    allTweets.push( tweetObject );
+  }
+  else {
+    allTweets.forEach( function( elem, i ) {
+      if( elem.origTweetID === origTweetID ) {
+        console.log( 'Update retweet count: index: ' + i );
+        console.log( 'Retweet count went from: ' + elem.retweetCount + ' to: ' + tweetObject.retweetCount);
+        allTweets[i] = tweetObject;
+        updated = true;
+      }
+    });
+    if( updated === true ) console.log( 'Updated retweet count');
+    console.log( allTweets);
+  };
+};
 function serverHandler(request, response) {
   // SERVE INDEX.HTML, CSS AND JS for Browser Client ////
   ecstatic(request, response);
@@ -80,44 +103,55 @@ function serverHandler(request, response) {
       if( err ){
         console.log('oldTweets error: ', err );
       };
-
+      //console.log(JSON.parse(data));
       if( oldTweets !== undefined && oldTweets.length !== 0 ){
         console.log('sending back old tweets');
         console.log(oldTweets);
-        socket.emit( 'oldtweets', oldTweets[0]);
+        socket.emit( 'oldtweets', oldTweets);
       }
     });
     // Regardless of whether there's data in th filestream, call the API to stream in new tweets//////
-    client.stream('statuses/filter', { track:'#javascript'}, function (stream) {
+    client.stream('statuses/filter', { track:'javascript'}, function (stream) {
       //if( err ) console.log( 'error sending api request: ' + err );
       currentTwitStream = stream;
       console.log( 'in stream callback');
+      // if( IN_DEVELOPMENT ){
+      //   // whilst testing, use filestream of raw tweets instead of making api call
+      //   fs.readFile(__dirname + tweetFile, "utf-8", function (err, data) {
+      //     var json = JSON.parse( data );
 
+      // }
       stream.on('data', function(tweet) {
             console.log('streaming data');
 
             var hash = regexFormatter( tweet );
             var text = getOriginalTweetText( tweet );
             var originalTweetID = getOriginalTweetId( tweet );
-            console.log( 'Orig Tweet Id: ' + origTweetID );
+            console.log( 'Orig Tweet Id: ' + originalTweetID );
             var retweetCount = getRetweetCount(tweet);
 
-            var fsObject = [{ origTweetID: origTweetID, text: text, hashtag: hash, retweetCount: retweetCount }];
-           // addOrUpdateTweetInFS( fsObject;)
+            var fsObject = { "origTweetID": originalTweetID, "text": text, "hashtag": hash, "retweetCount": retweetCount };
+
+            addOrUpdateTweetInFS( tweet, fsObject );
             socket.emit( 'tweet', fsObject );
 
-            fs.appendFile( '.'+ tweetFile, JSON.stringify(fsObject, null, 4), function(err) {
+            fs.appendFile( './rawTweets.json', JSON.stringify(tweet, null, 4)+',', function(err) {
                  if(err) {
-                     console.log('Error in fs.appendFile: ', err);
-                 } 
-                 else {
-                  console.log( 'FileStream: Added or Modified tweet in filestream');
-                  // console.log('emitting new tweets');
-                  // var newTweets = JSON.stringify(__dirname + "test.json");
-                  // socket.emit('tweet', newTweets);
-                  // console.log("The file was saved!");
+                     console.log('Error in rawtweets fs.appendFile: ', err);
                  };
             });
+            // fs.appendFile( '.'+ tweetFile, JSON.stringify(fsObject, null, 4) +',', function(err) {
+            //      if(err) {
+            //          console.log('Error in fs.appendFile: ', err);
+            //      } 
+            //      else {
+            //       console.log( 'FileStream: Added or Modified tweet in filestream');
+            //       // console.log('emitting new tweets');
+            //       // var newTweets = JSON.stringify(__dirname + "test.json");
+            //       // socket.emit('tweet', newTweets);
+            //       // console.log("The file was saved!");
+            //      };
+            // });
       });
 
       stream.on( 'end', function( response ) {

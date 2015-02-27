@@ -141,8 +141,13 @@ function addOrUpdateTweetInDataset( tweet, tweetObject ){
 	    });
 	    if( updated === true ) {
 	    	console.log( 'Updated retweet count');
-	    };
+	    }
+	    else{
+	    	// original tweet wasn't found so stick it in as a new tweet
+	    	whichDataSet.push( tweetObject );
+	    }
   	  };
+  	  resetDataSet( hash, whichDataSet );
 	  return whichDataSet;
   }
   else {
@@ -196,6 +201,8 @@ socket.on('tweet', function (tweet) {
 		}
 		else {
 			console.log( 'The currently active graph has not been changed.');
+			// update dataset for inactive graph
+		//	resetDataSet( updatedDataSet );		
 		}
     };
     // else {
@@ -203,21 +210,32 @@ socket.on('tweet', function (tweet) {
     // };
 });
 
-getRGBColor = function( retweets ) {
-	var retweets = ( retweets === 0 )? 1 : retweets;
-	if( activeRadioID === 'stopradio' || activeRadioID === 'chocradio') {
-		//redscale colors
-		return "rgb(" + (retweets*10) + ", 0, 0)";
+resetDataSet = function( hash, dataset ) {
+	var radio = hashToRadioID[ hash ];
+	switch( radio ){
+		case ('chocradio') :
+			chocolatedataset = dataset;
+			break;
+		case ('stopradio') :
+			stopdataset = dataset;
+			break;
+		case( 'cheeseradio'):
+			cheesedataset = dataset;
+			break;
+		case( 'goradio'):
+			godataset = dataset;
+			break;
+		case( 'candyradio'):
+			candydataset = dataset;
+			break;
+		case( 'continueradio'):
+			continuedataset = dataset;
+			break;
+		default:
+			console.log( 'No default dataset!!');
 	}
-	else if( activeRadioID === 'goradio' || activeRadioID === 'cheeseradio') {
-		//greenscale colors
-		return "rgb(0," + (retweets*10) + ",0)";
-	}
-	else {
-		//bluescale colors
-		return "rgb(0,0," + (retweets*10) + ")";
-	};
 };
+
 createInitialGraph = function(){
 	// force acivedataset to stopdataset for now
 	activedataset = chocolatedataset;
@@ -228,20 +246,11 @@ createInitialGraph = function(){
 	   .data( activedataset)
 	   .enter()
 	   .append("rect")
-	   .attr( { "x" : function(d, i) {
-	   		     		return xScale(i);
-	          		} ,
-	   		    "y": function(d) {
-	   					console.log( 'Y Scale for retweet count: ' + d.retweets + ' : ' +yScale(d.retweets)) ;
-	   					return h - yScale(d.retweets);
-	   				  },
+	   .attr( { "x" : function (d, i) {return xScale(i);} ,
+	   		    "y": function (d) { return h - yScale(d.retweets); },
 	   			"width": xScale.rangeBand(),
-	   			"height": function(d) {
-	   						return yScale(d.retweets);
-	   					  },
-	   			"fill": function(d) {
-							return fillColor( d );
-	   					}
+	   			"height": function (d) {	return yScale(d.retweets); },
+	   			"fill": function (d) {return fillColor( d );	}
 	    })
 	   .on("mouseover", function(d) {
 
@@ -267,35 +276,14 @@ createInitialGraph = function(){
 			  .classed("hidden", true);
 	   });
 
-
-	//Create labels
-	// d3.select('svg').selectAll("text")
-	//    .data(activedataset)
-	//    .enter()
-	//    .append("text")
-	//    .text(function(d) {
-	//    		return d.text;
-	//    })
-	//    .attr("text-anchor", "middle")
-	//    .attr("x", function(d, i) {
-	//    		return activeXScale(i) + activeXScale.rangeBand() / 2;
-	//    })
-	//    .attr("y", function(d) {
-	//    		return h - activeYScale(d.retweets) + 14;
-	//    })
-	//    .attr("font-family", "sans-serif")
-	//    .attr("font-size", "11px")
-	//    .attr("fill", "white");
 };
 
 updateActiveGraph = function( newDataSet ) {
 
 	//Update scale domains
 	xScale.domain(d3.range(newDataSet.length));
-	yScale.domain([0, d3.max(newDataSet, function(d) {
-    							return d.retweets;
-				  			})
-						]);
+	yScale.domain([0, d3.max(newDataSet, function(d) {return d.retweets;})]);
+	colorScale.domain( [d3.min(newDataSet, function(d) {return d.retweets}), d3.max(newDataSet, function(d) {return d.retweets})] );
 	//Select…
 	var bars = svg.selectAll("rect")			//Select all bars
 				  .data(newDataSet);			//Re-bind data to existing bars, return the 'update' selection
@@ -328,7 +316,7 @@ updateActiveGraph = function( newDataSet ) {
 			  .style("left", xPosition + "px")
 			  .style("top", yPosition + "px")						
 			  .select("#value")
-			  .text(d.origTweetID + ' : ' + d.text);
+			  .text(d.retweets + '. ' + d.origTweetID + ' : ' + d.text);
 	   
 			//Show the tooltip
 			d3.select("#tooltip")
@@ -362,48 +350,10 @@ updateActiveGraph = function( newDataSet ) {
 		.attr("x", w)		//Move past the right edge of the SVG
 		.remove();   		//Deletes this element from the DOM once transition is complete
 
-
-	//Update all labels
-//  	var labels = svg.selectAll("text")
-// 	   				.data(activedataset);
-// //Enter…
-// 	labels.enter()								//References the enter selection (a subset of the update selection)
-// 		.append("text")							//Creates a new text
-// 		.text(function(d) {
-// 		   		return d.text;
-// 		 })						
-// 		.attr("x", w)							//Sets the initial x position of the rect beyond the far right edge of the SVG
-// 		.attr("y", function(d) {				//Sets the y value, based on the updated yScale
-// 			return h - activeYScale(d.retweets) + 14;
-// 		});
-
-//    	labels.transition()
-//        	   .duration(1600)
-//            .ease( 'linear')
-// 		   .text(function(d) {
-// 		   		return d.text;
-// 		   })
-// 		   .attr("x", function(d, i) {
-// 		   		return activeXScale(i) + activeXScale.rangeBand() / 2;
-// 		   })
-// 		   .attr("y", function(d) {
-// 		   		return h - activeYScale(d.retweets) + 14;
-// 		   })
-// 		   .attr("font-family", "sans-serif")
-// 	   	   .attr("font-size", "11px")
-// 	       .attr("fill", "white");
-
-// 	   //Exit…
-// 	labels.exit()				//References the exit selection (a subset of the update selection)
-// 	   	  .transition()		//Initiates a transition on the elements we're deleting
-// 		  .duration(500)
-// 		  .attr("x", w)		//Move past the right edge of the SVG
-// 		  .remove();  
-
-
 };
-setActiveDataSet = function (activeRadioID){
+setActiveDataSet = function (radioID){
 	//d3.select(this).classed( 'clicked', true);
+	activeRadioID = radioID;
 	console.log( 'Active Radio Button: ' + activeRadioID);
 	//Set activedataset to be the dateset of the graph selected with the radio button
 	if( activeRadioID === 'stopradio' ) activedataset = stopdataset;

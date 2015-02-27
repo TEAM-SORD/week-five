@@ -9,16 +9,10 @@ var svg = d3.select("#graph")
 				.attr("width", w)
 				.attr("height", h);
 
-var activeRadioID = 'stopradio';
+var activeRadioID = 'chocradio';
 var activedataset = [];
 var activeXScale, activeYScale, stopXScale, stopYScale, goXScale, goYScale, continueXScale, continueYScale,
 	 chocXScale, chocYScale, cheeseXScale, cheeseYScale, candyXScale, candyYScale;
-
-var validHashTags = [ 'chocolate', 'cheese', 'candy' ];
-var validDataSets = { 'chocolate': stopdataset, 'cheese': godataset, 'candy': continuedataset};
-var hashToRadioID = { 'chocolate': 'chocradio', 'cheese': 'cheeseradio', 'candy': 'candyradio'};
-var hashToXScale = { 'chocolate': chocXScale, 'cheese': cheeseXScale, 'candy': candyXScale};
-var hashToYScale = { 'chocolate': chocYScale, 'cheese': cheeseYScale, 'candy': candyYScale};
 
 var stopdataset = [ { origTweetID: '1', text: 'No bleach at breakfast!', retweets: 1 },
 						{ origTweetID: '2',text: 'Old food in the fridge', retweets: 2 }];
@@ -36,7 +30,6 @@ var cheesedataset = [ { origTweetID: '3',text: 'More homework everyday!', retwee
 var candydataset = [ { origTweetID: '5',text: 'Whisky on Fridays', retweets: 10 },
 						{ origTweetID: '6',text: 'More d3!', retweets: 22 }
 					  ];
-
 // var stopdataset = [ 5, 10, 20, 15, 18 ]
 var stopXScale = d3.scale.ordinal()
 				.domain(d3.range(stopdataset.length))
@@ -49,16 +42,21 @@ var stopYScale = d3.scale.linear()
 				  })])
 				.range([0, h]);
 
-var chocXScale = d3.scale.ordinal()
+var chocolateXScale = d3.scale.ordinal()
 				.domain(d3.range(chocolatedataset.length))
 				.rangeRoundBands([0, w], 0.05);
 
-var chocYScale = d3.scale.linear()
+var chocolateYScale = d3.scale.linear()
 				.domain([0, d3.max( chocolatedataset, function(d) {
 					console.log( 'in max(): retweet: ' + d.retweets);
     				return d.retweets;
 				  })])
 				.range([0, h]);
+var validHashTags = [ 'chocolate', 'cheese', 'candy' ];
+var validDataSets = { 'chocolate': chocolatedataset, 'cheese': cheesedataset, 'candy': candydataset};
+var hashToRadioID = { 'chocolate': 'chocradio', 'cheese': 'cheeseradio', 'candy': 'candyradio'};
+var hashToXScale = { 'chocolate': chocolateXScale, 'cheese': cheeseXScale, 'candy': candyXScale};
+var hashToYScale = { 'chocolate': chocolateYScale, 'cheese': cheeseYScale, 'candy': candyYScale};
 
 tweetIsARetweet = function( originalID, retweets, dataset ){
 	return dataset.some( function( elem, i ) {
@@ -84,8 +82,8 @@ function regexFormatter (tweet){
   };
   var hash = formatter[0].slice(1);
   console.log( 'Hash: '+ hash);
-  if( hashTag !== '' && hashTag !==null) {
-    	hashTag = hashTag.toLowerCase();
+  if( hash !== '' && hash !==null) {
+    	hash = hash.toLowerCase();
   };
   return hash;
 };
@@ -132,7 +130,7 @@ function addOrUpdateTweetInDataset( tweet, tweetObject ){
   // if new tweet for one of our three hashtags then push into appropriate dataset
   // else if a retweet then update retweet count
   var updated = false;
-  var hash = tweetObject.hash;
+  var hash = tweetObject.hashtag;
   var origTweetID = tweetObject.origTweetID;
   console.log( 'In addOrUpdateTweetInDataset - looking up OrigTweetID: ' + origTweetID);
   var whichDataSet = validDataSets[ hash ];
@@ -154,8 +152,8 @@ function addOrUpdateTweetInDataset( tweet, tweetObject ){
 	    	console.log( 'Updated retweet count');
 	    	//console.log( allTweets);
 	    };
-	    return whichDataSet;
-  	};
+  	  };
+	  return whichDataSet;
   }
   else {
   	console.log( "In addOrUpdateTweetInDataset - couldn't find correct dataset" );
@@ -195,7 +193,7 @@ socket.on('tweet', function (tweet) {
 	// if tweet is for one of the hash tags we want to display then update datasets
 	
 	var hash = regexFormatter( tweet );
-	if( validHashTags.indexOf( hash ) === -1 ) { 
+	if( validHashTags.indexOf( hash ) !== -1 ) { 
 		var updatedDataSet = extractDataIntoDataSet (tweet);
 		
 		// if tweet is for the currently active graph then update the graph
@@ -269,9 +267,9 @@ getRGBColor = function( retweets ) {
 };
 createInitialGraph = function(){
 	// force acivedataset to stopdataset for now
-	activedataset = stopdataset;
-	activeXScale = stopXScale;
-	activeYScale = stopYScale;
+	activedataset = chocolatedataset;
+	activeXScale = chocolateXScale;
+	activeYScale = chocolateYScale;
 	//Create bars
 	svg.selectAll("rect")
 	   .data( activedataset)

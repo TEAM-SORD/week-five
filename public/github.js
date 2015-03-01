@@ -8,22 +8,22 @@ var svg = d3.select("#graph")
 			.append("svg")
 			.attr("width", w)
 			.attr("height", h);
-var emptyset = [{ origTweetID: 0, hashtag:'',text: '', retweets: 0 }]
-var stopdataset = [ { origTweetID: 1, hashtag:'stop',text: 'No bleach at breakfast!', retweets: 1 },
-						{ origTweetID: 2,hashtag: 'stop',text: 'Old food in the fridge', retweets: 2 }];
-var godataset = [ { origTweetID: 3,text:  'More homework everyday!', hashtag:'go',retweets: 2 },
-				  { origTweetID: 4,text: 'Pizza fridays!!', hashtag:'go',retweets: 12 }
+
+var stopdataset = [ { origTweetID: '1', text: 'No bleach at breakfast!', retweets: 1 },
+						{ origTweetID: '2',text: 'Old food in the fridge', retweets: 2 }];
+var godataset = [ { origTweetID: '3',text: 'More homework everyday!', retweets: 2 },
+				  { origTweetID: '4',text: 'Pizza fridays!!', retweets: 12 }
 				];
-var continuedataset = [ { origTweetID: 5,text: 'Whisky on Fridays', hashtag:'continue',retweets: 10 },
-						{ origTweetID: 6,text: 'More d3!', hashtag:'continue',retweets: 22 }
+var continuedataset = [ { origTweetID: '5',text: 'Whisky on Fridays', retweets: 10 },
+						{ origTweetID: '6',text: 'More d3!', retweets: 22 }
 					  ];
-var chocolatedataset = [ { origTweetID: 7, text: 'No bleach at breakfast!', hashtag:'chocolate',retweets: 1 },
-						{ origTweetID: 8,text: 'Old food in the fridge', hashtag:'chocolate',retweets: 2 }];
-var cheesedataset = [ { origTweetID: 9,text: 'More homework everyday!', hashtag:'cheese',retweets: 2 },
-				  { origTweetID: 10,text: 'Pizza fridays!!', hashtag:'cheese',retweets: 12 }
+var chocolatedataset = [ { origTweetID: '1', text: 'No bleach at breakfast!', retweets: 1 },
+						{ origTweetID: '2',text: 'Old food in the fridge', retweets: 2 }];
+var cheesedataset = [ { origTweetID: '3',text: 'More homework everyday!', retweets: 2 },
+				  { origTweetID: '4',text: 'Pizza fridays!!', retweets: 12 }
 				];
-var candydataset = [ { origTweetID: 11,text: 'Whisky on Fridays', hashtag:'candy',retweets: 10 },
-						{ origTweetID: 12,text: 'More d3!', hashtag:'candy',retweets: 22 }
+var candydataset = [ { origTweetID: '5',text: 'Whisky on Fridays', retweets: 10 },
+						{ origTweetID: '6',text: 'More d3!', retweets: 22 }
 					  ];
 
 var activeRadioID = 'chocradio';
@@ -43,11 +43,11 @@ var colorScale = d3.scale.linear()
 				   .domain( [0, d3.max( activedataset, function(d) { return d.retweets; })])
 				   .range([25, 50]);
 
-var validHashTags = [ 'chocolate', 'cheese', 'candy', 'stop', 'go', 'continue' ];
-var validDataSets = { 'chocolate': chocolatedataset, 'cheese': cheesedataset, 'candy': candydataset,
-					  'go':godataset, 'stop':stopdataset, 'contine':continuedataset };
-var hashToRadioID = { 'chocolate': 'chocradio', 'cheese': 'cheeseradio', 'candy': 'candyradio', 
-						'go':'goradio', 'stop':'stopradio', 'continue':'continueradio'};
+var validHashTags = [ 'chocolate', 'cheese', 'candy' ];
+var validDataSets = { 'chocolate': chocolatedataset, 'cheese': cheesedataset, 'candy': candydataset};
+var hashToRadioID = { 'chocolate': 'chocradio', 'cheese': 'cheeseradio', 'candy': 'candyradio'};
+var hashToXScale = { 'chocolate': xScale, 'cheese': xScale, 'candy': xScale};
+var hashToYScale = { 'chocolate': yScale, 'cheese': yScale, 'candy': yScale};
 
 function fillColor( d ){
 	switch( activeRadioID ){
@@ -147,7 +147,7 @@ function addOrUpdateTweetInDataset( tweet, tweetObject ){
 	    	whichDataSet.push( tweetObject );
 	    }
   	  };
-  	  //resetDataSet( hash, whichDataSet );
+  	  resetDataSet( hash, whichDataSet );
 	  return whichDataSet;
   }
   else {
@@ -241,7 +241,7 @@ createInitialGraph = function(){
 	activedataset = chocolatedataset;
 	//activeXScale = chocolateXScale;
 	//activeYScale = chocolateYScale;
-	//Create bars for each 'page'
+	//Create bars
 	svg.selectAll("rect")
 	   .data( activedataset)
 	   .enter()
@@ -332,21 +332,16 @@ updateActiveGraph = function( newDataSet ) {
 	//Update…
 	bars.transition()							//Initiate a transition on all elements in the update selection (all rects)
 		.duration(500)
-		.attr( { "x": function(d, i) {				//Set new x position, based on the updated xScale
-					return xScale(i);
-				},
-				"y": function(d) {				//Set new y position, based on the updated yScale
-					return h - yScale(d.retweets);
-				},
-				"width": xScale.rangeBand(),		//Set new width value, based on the updated xScale
-				"height": function(d) {			//Set new height value, based on the updated yScale
-					return yScale(d.retweets);
-				},
-				"fill": function(d) {
-							return fillColor( d );
-	   					}
-			  }		
-			 );
+		.attr("x", function(d, i) {				//Set new x position, based on the updated xScale
+			return xScale(i);
+		})
+		.attr("y", function(d) {				//Set new y position, based on the updated yScale
+			return h - yScale(d.retweets);
+		})
+		.attr("width", xScale.rangeBand())		//Set new width value, based on the updated xScale
+		.attr("height", function(d) {			//Set new height value, based on the updated yScale
+			return yScale(d.retweets);
+		});
 		
 	//Exit…
 	bars.exit()				//References the exit selection (a subset of the update selection)
@@ -370,9 +365,6 @@ setActiveDataSet = function (radioID){
 
 	console.log( 'activedataset: ' + activedataset);
 };
-emptyGraph = function(){
-	updateActiveGraph(emptyset);
-}
 $(document).ready( function (){
     
    createInitialGraph();
@@ -382,11 +374,11 @@ $(document).ready( function (){
 	  .on("click", function() {
 	  		console.log( 'CHANGING GRAPHS' );
 	  		setActiveDataSet(d3.select(this).attr("id"));
-	  		//emptyGraph();
+	  		
 			updateActiveGraph( activedataset);
 
 		});	
-    /*d3.selectAll('rect')
+    d3.selectAll('rect')
        .on("mouseover", function(d) {
 
 			//Get this bar's x/y values, then augment for the tooltip
@@ -410,5 +402,3 @@ $(document).ready( function (){
 			d3.select("#tooltip")
 			  .classed("hidden", true);
 	   });
-*/
-});

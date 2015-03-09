@@ -1,3 +1,10 @@
+node_modules
+rawTweets.json
+index.js
+examples.json
+tweetStorage.json
+tail
+play.json
 play.js
 config.json
 .config.json
